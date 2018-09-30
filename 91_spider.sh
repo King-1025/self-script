@@ -19,9 +19,12 @@ SAVE_FILE=$ROOT/out.html
 CURL_OPTION="-# -L -f --tcp-fastopen --tcp-nodelay --trace-time"
 TIME=0
 SELF_UA=0
+LOG_LEVEL=0
+LOG_FILE=
+LOG_STYLE=
 
 #入口
-function main()
+function app()
 {
   parse_args "$*"
   show
@@ -36,7 +39,7 @@ function main()
 #抓取
 function crawl()
 {
-  log "crawl()" "start crawling..."
+  log i "start crawling..."
   local flag=$1
   local max_value=$2
   while [ $flag -le $max_value ]; do
@@ -44,10 +47,10 @@ function crawl()
      {
      local page_url="${SITE}v.php?next=watch&page=$flag"
      local page_data=".page_tmp$flag"
-     echo "fetch $page_url"
+     log i "fetch $page_url"
      fetch $page_data $page_url $page_url
      if [ $? -eq 0 ] && [ -e "$page_data" ]; then
-        echo "page data is ok."
+        log i "page data is ok."
 	#解析view
 	local views=($(pick_keys $page_data))
 	rm -f $page_data
@@ -58,10 +61,10 @@ function crawl()
 	   {
 	     local view_url=${views[index]}
 	     local view_data=".view_tmp$flag$index"
-	     echo "fetch $view_url"
+	     log i "fetch $view_url"
              fetch $view_data $view_url $page_url
 	     if [ $? -eq 0 ] && [ -e "$view_data" ]; then
-	        echo "view data is ok.($flag:$index)"
+	        log i "view data is ok.($flag:$index)"
 	        #提取视频
 	        local title=$(pick_title $view_data)
                 is_null "title" $title
@@ -75,7 +78,7 @@ function crawl()
 			 is_new $title
 			 if [ $? -eq 1 ]; then
 			    save $title $poster $video_src
-			    echo "save ok!"
+			    log i "save ok!"
 			    add "valid" 1
 		         fi
 		       fi
@@ -83,9 +86,8 @@ function crawl()
 	         fi
 	      rm -f $viewdata
 	      else
-	         echo "view data is no."
+	         log w "view data is no."
 	      fi
-	      echo ""
 	      add "total" 1
 	      echo >&6
           } &
@@ -93,10 +95,9 @@ function crawl()
 	done
 	wait
      else
-	echo "page data is no."
+	log w "page data is no."
      fi
-     echo ""
-     log "crawl()" "page $flag over."
+     log i "page $flag over."
      echo >&6
      } &
      let flag+=1
@@ -104,7 +105,7 @@ function crawl()
   wait
   local total=$(get "total")
   local valid=$(get "valid")
-  log "crawl()" "all works is done.(total:$total valid:$valid)"
+  log i "all works is done.(total:$total valid:$valid)"
 }
 
 function add()
@@ -140,7 +141,7 @@ function is_new()
    if [ -e $SAVE_FILE ]; then
       local res=$(sed -n "#$1#p" $SAVE_FILE)
       if [ "$res" != "" ]; then
-	 log "is_new()" "repeate:$res"
+	 log w "repeate:$res"
          return 0
       fi
    fi 	      
@@ -150,8 +151,7 @@ function is_new()
 function at_time()
 {
   TIME=$(date +%s)
-  echo ""
-  log "at_time()" "start"
+  log i "time start at $TIME"
 }
 
 function check_time()
@@ -164,8 +164,7 @@ function check_time()
   if [ $# -eq 1 ]; then
      info=$1" "$info
   fi
-  echo ""
-  log "check_time()" "$info$tmp_time"
+  log i "${info}${tmp_time}s"
 }
 
 function save()
@@ -174,14 +173,14 @@ function save()
      if [ ! -e $SAVE_FILE ]; then
 	touch $SAVE_FILE
 	init_html $SAVE_FILE
-	echo "create file:$SAVE_FILE"
+	log i "create file:$SAVE_FILE"
      fi
      local html='<div><a href="'$3'"><img src="'$2'" width="100%"><hr></a><p>'$1'</p></div><br>'
      sed  -i "s#^</body>#$html\n&#" $SAVE_FILE
   elif [ $SAVE_TYPE == "txt" ]; then
      if [ ! -e $SAVE_FILE ]; then
 	touch $SAVE_FILE
-	echo "create file:$SAVE_FILE"
+	log i "create file:$SAVE_FILE"
      fi
      echo $1 >> $SAVE_FILE
      echo $3 >> $SAVE_FILE
@@ -189,7 +188,7 @@ function save()
    elif [ $SAVE_TYPE == "file" ]; then
       if [ ! -e $SAVE_FILE ]; then
         mkdir -p $SAVE_FILE
-	echo "create dir:$SAVE_FILE"
+	log i "create dir:$SAVE_FILE"
       fi
       local d=$SAVE_FILE/$1
       if [ ! -e $d ]; then
@@ -252,30 +251,28 @@ function rand(){
 function fetch()
 {
    echo "" > $1
-   curl -A "$(gen_ua)" -e $3 -o $1 -H "Accept-Language: zh-CN,zh;q=0.9" -H "X-Forwarded-For: $(get_random_ip)" -H "Content-Type: multipart/form-data; session_language=cn_CN" --connect-timeout 3 --retry 1 --retry-max-time 2 $CURL_OPTION $2
+   curl -A "$(gen_ua)" -e $3 -o $1 -H "Accept-Language: zh-CN,zh;q=0.9" -H "X-Forwarded-For: $(get_random_ip)" -H "Content-Type: multipart/form-data; session_language=cn_CN" --connect-timeout 3 --retry 1 --retry-max-time 2 $CURL_OPTION $2 2>&1 > /dev/null
    sleep 1
 }   
 
 function is_null()
 {
   if [ "$2" == "" ]; then
-      echo ""
-      log "is_null()" "$1 is null!"
+      log w "$1 is null!"
       return 0
   else
-      echo "$1:$2"
+      log i "$1:$2"
       return 1
   fi
 }
 
 function show()
 {
-  log "show()" "view config"
-  echo "OFFSET_PAGE:$OFFSET_PAGE"
-  echo "MAX_PAGE:$MAX_PAGE"
-  echo "IS_CONTINUE:$IS_CONTINUE"
-  echo "PROCESS:$PROCESS"
-  echo ""
+  log d "view config"
+  log d "OFFSET_PAGE:$OFFSET_PAGE"
+  log d "MAX_PAGE:$MAX_PAGE"
+  log d "IS_CONTINUE:$IS_CONTINUE"
+  log d "PROCESS:$PROCESS"
 }
 
 function prepare()
@@ -283,37 +280,36 @@ function prepare()
    init_config
    
    if [ $IS_CONTINUE -ne 1 ]; then
-      log "prepare()" "clean $SAVE_FILE"
+      log d "clean $SAVE_FILE"
       rm -rf $SAVE_FILE
    else
-      log "prepare()" "continue to use $SAVE_FILE for saving data"
+      log i "continue to use $SAVE_FILE for saving data"
    fi
-   
+
    rm -f .page_tmp*
    rm -f .view_tmp*
 
-   log "prepare()" "build FIFO..."
+   log d "build FIFO..."
    local tmp="$ROOT/.fifo_tmp"
-   echo "create temp file:$tmp"
+   log d "create temp file:$tmp"
    mkfifo $tmp
-   echo "use 6 to bind FIFO"
+   log d "use 6 to bind FIFO"
    exec 6<>$tmp
-   echo "delete temp file:$tmp"
+   log d "delete temp file:$tmp"
    rm -f $tmp
-   echo "set process:$PROCESS"
+   log d "set process:$PROCESS"
    for ((i=0;i<$PROCESS;i++))
    do
         echo >&6
    done
-   echo "FIFO ok!"
-   echo ""
+   log d "FIFO ok!"
 }
 
 function free()
 {
-   log "free()" "close FIFO"
+   log d "close FIFO"
    exec 6>&-
-   log "free()" "make clean"
+   log d "make clean"
    rm -f .page_tmp*
    rm -f .view_tmp*
    rm -f .config_tmp
@@ -329,8 +325,7 @@ echo "作者:King-1025
 
 function help()
 {
-  echo "Usage:$0 [-c|--continue] [-r|--range <<start end>|index
->] [-p|--process <value>] [-t <html|txt|file>] [-o outfile] [-h|--help]."
+  echo "Usage:$0 [-c|--continue] [-r|--range <start end>|index] [-p|--process <value>] [-t|--save-type <html|txt|file>] [-o|--out-file outfile] [-ll|--log-level <d|i|w|e>] [-lf|--log-file logfile] [ls|--log-style <default|less|middle|more>] [-h|--help]."
 }
 
 function parse_args()
@@ -343,18 +338,59 @@ function parse_args()
          "-c"|"--continue")
             IS_CONTINUE=1
             ;;
-	 "-o"|"--out_file")
+	 "-ls"|"--log-style")
+	    inspect $i 1 $length
+	    if [ $? -eq 1 ]; then   
+	    local v0=${argv[$[$i+1]]}         
+	       if [ ${v0:0:1} != "-" ]; then       
+		  LOG_STYLE=$v0          
+	       fi                            
+            fi
+	    ;;
+         "-lf"|"--log-file")
+	    inspect $i 1 $length
+	    if [ $? -eq 1 ]; then
+	      local v0=${argv[$[$i+1]]}
+	      if [ ${v0:0:1} != "-" ]; then
+                LOG_FILE=$v0
+	      fi
+            fi
+	    LOG_FILE="91pron-$(date +'%y%m%d%H%M%S').log"
+	    rm -f $LOG_FILE
+	    ;;
+         "-ll"|"--log-level")
             inspect $i 1 $length
 	    if [ $? -eq 1 ]; then
-               local v0=${argv[$[$i+1]]}
-	       SAVE_FILE=$v0
+	      local v0=${argv[$[$i+1]]}
+              if [ "$v0" == "d" ]; then
+		 LOG_LEVEL=0
+	      elif [ "$v0" == "i" ]; then
+		 LOG_LEVEL=1
+	      elif [ "$v0" == "w" ]; then
+		 LOG_LEVEL=2
+	      elif [ "$v0" == "e" ]; then
+		 LOG_LEVEL=3
+	      else
+	         echo "error log level:$v0"
+	         help
+		 exit 1
+	      fi
+	    fi
+	    ;;
+	 "-o"|"--out-file")
+            inspect $i 1 $length
+	    if [ $? -eq 1 ]; then
+	       if [ ${v0:0:1} != "-" ]; then
+                  local v0=${argv[$[$i+1]]}
+	          SAVE_FILE=$v0
+	       fi
 	    else 
 	       echo "-o needs a filename"
 	       help
 	       exit 1
 	    fi
 	    ;;
-	 "-t"|"--save_type")
+	 "-t"|"--save-type")
 	    inspect $i 1 $length
 	    if [ $? -eq 1 ]; then
                local v0=${argv[$[$i+1]]}
@@ -377,22 +413,27 @@ function parse_args()
             if [ $? -eq 1 ]; then
                local v0=${argv[$[$i+1]]}
                local v1=${argv[$[$i+2]]}
-               OFFSET_PAGE=$[$v0-1]
-               MAX_PAGE=$v1
-               continue
+	       if [ ${v0:0:1} != "-" ] && [ ${v1:0:1} != "-" ]; then
+                  OFFSET_PAGE=$[$v0-1]
+                  MAX_PAGE=$v1
+	       fi
             fi
             inspect $i 1 $length
             if [ $? -eq 1 ]; then
                local v0=${argv[$[$i+1]]}
-               OFFSET_PAGE=$[$v0-1]
-               MAX_PAGE=$v0
+	       if [ ${v0:0:1} != "-" ]; then
+                  OFFSET_PAGE=$[$v0-1]
+                  MAX_PAGE=$v0
+               fi
             fi
             ;;
         "-p"|"--process")
             inspect $i 1 $length
             if [ $? -eq 1 ]; then
                local v0=${argv[$[$i+1]]}
-               PROCESS=$v0
+	       if [ ${v0:0:1} != "-" ]; then
+                  PROCESS=$v0
+	       fi
             fi
             ;;
         "-h"|"--help")
@@ -413,7 +454,7 @@ fi
 
 function not_implement()
 {
-  echo "$1 not implement!"
+  log w "$1 not implement!"
   exit 0
 }
 
@@ -430,36 +471,60 @@ function inspect()
 #检查运行需求
 function check()
 {
-  log "check()" "requirement checking..."
+  log i "requirement checking..."
   local nc=0
   for i in $@; do
       which $i > /dev/null  2>&1
       if [ $? -ne 0 ]; then
 	 if [ "$i" == "ua" ]; then
             SELF_UA=1
-	    log "check()" "use self ua instead."
+	    log w "use self ua instead."
          else
-	    echo "$i not found!"
+	    log e "$i not found!"
 	    let nc+=1
 	 fi
       fi
   done
-  echo ""
   if [ $nc -gt 0 ]; then
-     log "check()" "$nc requirements not found!"
+     log e "$nc requirements not found!"
      exit 1
   else
-     log "check()" "all requirements ok!"
+     log i "all requirements ok!"
   fi
 }
 
 function log()
-{
- if [ "$#" -eq 2 ]; then
-    echo "$(date)"
-    echo "$1 --- $2"
-    echo ""
- fi
+{                      
+    local logtype=$1        
+    local logmsg=$2          
+    local logfile=$LOG_FILE           
+    local loglevel=$LOG_LEVEL
+    local logstyle=$LOG_STYLE
+    local logdate=$(date +'%F %H:%M:%S')       
+    local line=$(caller 0 | awk '{print $1}')
+    local format="$logmsg"
+    if [ "$logstyle" == "less" ]; then
+       format="$logdate $logmsg"
+    elif [ "$logstyle" == "middle" ]; then
+       format="${FUNCNAME[@]/log/} [line:$line] $logmsg"
+       format=${format:1}
+    elif [ "$logstyle" == "more" ]; then
+       format="$logdate${FUNCNAME[@]/log/} [line:$line] $logmsg"
+    fi
+    {                                                                    case $logtype in          
+         "d"|"debug")                                                             [[ $loglevel -le 0 ]] && echo -e "\033[30m[debug] ${format}\033[0m"
+         ;;
+         "i"|"info")
+               [[ $loglevel -le 1 ]] && echo -e "\033[32m[info] ${format}\033[0m"
+         ;;
+        "w"|"warn")
+               [[ $loglevel -le 2 ]] && echo -e "\033[33m[warn] ${format}\033[0m"
+        ;;
+        "e"|"error")
+               [[ $loglevel -le 3 ]] && echo -e "\033[31m[error] ${format}\033[0m"
+        ;;
+       esac
+    } | tee -a $logfile
 }
 
 function gen_ua()
@@ -474,4 +539,4 @@ function gen_ua()
   fi
 }
 
-main "$#" "$*"
+app "$#" "$*"
