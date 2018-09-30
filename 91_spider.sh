@@ -8,7 +8,7 @@
 ROOT=.
 #运行该脚本需求的工具
 REQUIREMENT="curl sed ua awk"
-OFFSET_PAGE=-1
+OFFSET_PAGE=0
 MAX_PAGE=8
 IS_CONTINUE=0 
 PROCESS=8
@@ -417,6 +417,7 @@ function parse_args()
 	       if [ ${v0:0:1} != "-" ] && [ ${v1:0:1} != "-" ]; then
                   OFFSET_PAGE=$v0
                   MAX_PAGE=$v1
+		  continue
 	       fi
             fi
             inspect $i 1 $length
