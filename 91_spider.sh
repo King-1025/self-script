@@ -415,7 +415,7 @@ function parse_args()
                local v0=${argv[$[$i+1]]}
                local v1=${argv[$[$i+2]]}
 	       if [ ${v0:0:1} != "-" ] && [ ${v1:0:1} != "-" ]; then
-                  OFFSET_PAGE=$[$v0-1]
+                  OFFSET_PAGE=$v0
                   MAX_PAGE=$v1
 	       fi
             fi
@@ -423,7 +423,7 @@ function parse_args()
             if [ $? -eq 1 ]; then
                local v0=${argv[$[$i+1]]}
 	       if [ ${v0:0:1} != "-" ]; then
-                  OFFSET_PAGE=$[$v0-1]
+                  OFFSET_PAGE=$v0
                   MAX_PAGE=$v0
                fi
             fi
