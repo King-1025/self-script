@@ -50,7 +50,7 @@ function crawl()
      log i "fetch $page_url"
      fetch $page_data $page_url $page_url
      if [ $? -eq 0 ] && [ -e "$page_data" ]; then
-        log i "page data is ok."
+	log i "page data is ok.($flag)"
 	#解析view
 	local views=($(pick_keys $page_data))
 	rm -f $page_data
@@ -64,21 +64,22 @@ function crawl()
 	     log i "fetch $view_url"
              fetch $view_data $view_url $page_url
 	     if [ $? -eq 0 ] && [ -e "$view_data" ]; then
-	        log i "view data is ok.($flag:$index)"
+		local tag="$flag:$index"
+	        log i "view data is ok.($tag)"
 	        #提取视频
 	        local title=$(pick_title $view_data)
-                is_null "title" $title
+                is_null "title[$tag]" $title
 	        if [ $? -eq 1 ]; then
 		   local poster=$(pick_poster $view_data)
-		   is_null "poster" $poster
+		   is_null "poster[$tag]" $poster
 		   if [ $? -eq 1 ]; then
 		      local video_src=$(pick_video $view_data)
-	              is_null "video_src" $video_src
+	              is_null "video_src[$tag]" $video_src
 	              if [ $? -eq 1 ]; then
 			 is_new $title
 			 if [ $? -eq 1 ]; then
 			    save $title $poster $video_src
-			    log i "save ok!"
+			    log i "view data save ok!($tag)"
 			    add "valid" 1
 		         fi
 		       fi
@@ -380,8 +381,8 @@ function parse_args()
 	 "-o"|"--out-file")
             inspect $i 1 $length
 	    if [ $? -eq 1 ]; then
+	       local v0=${argv[$[$i+1]]}
 	       if [ ${v0:0:1} != "-" ]; then
-                  local v0=${argv[$[$i+1]]}
 	          SAVE_FILE=$v0
 	       fi
 	    else 
