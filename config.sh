@@ -15,10 +15,25 @@ alias sc="cd $SC"
 alias gvs="git status"
 alias gaa="git add ."
 alias gm="git commit -m"
+alias uf="update_termux_font"
 
 function solve_vim_charset()
 {
 echo "set fileencodings=utf-8,gb2312,gb18030,gbk,ucs-bom,cp936,latin1
 set enc=utf8
 set fencs=utf8,gbk,gb2312,gb18030"
+}
+
+function update_termux_font()
+{ 
+  if [ $# -eq 1 ]; then
+     if [ -e $1 ];then
+        cp -fr "$1" "$HOME/.termux/font.ttf";
+	termux-reload-settings
+     else
+	echo "not exist $1"
+     fi
+  else
+	echo "only need one argument!"
+  fi
 }
