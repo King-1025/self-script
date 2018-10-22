@@ -15,3 +15,10 @@ alias sc="cd $SC"
 alias gvs="git status"
 alias gaa="git add ."
 alias gm="git commit -m"
+
+function solve_vim_charset()
+{
+echo "set fileencodings=utf-8,gb2312,gb18030,gbk,ucs-bom,cp936,latin1
+set enc=utf8
+set fencs=utf8,gbk,gb2312,gb18030"
+}
