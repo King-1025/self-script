@@ -2,8 +2,10 @@
 
 export PATH=$PATH:$HOME/self/bin
 
-export OO=/sdcard/oo
-export DL=/sdcard/Download
+#export OO=/sdcard/oo
+#export DL=/sdcard/Download
+export OO=/storage/sdcard0/O_o
+export DL=/storage/sdcard0/Download
 export SC=$HOME/self/bin/script
 
 alias 91="91_spider"
@@ -16,6 +18,8 @@ alias gvs="git status"
 alias gaa="git add ."
 alias gm="git commit -m"
 alias uf="update_termux_font"
+alias fhp="find_httpd_pid"
+alias kh="kill_httpd"
 
 function solve_vim_charset()
 {
@@ -36,4 +40,20 @@ function update_termux_font()
   else
 	echo "only need one argument!"
   fi
+}
+
+function find_httpd_pid()
+{
+  echo $(ps -ef | grep httpd | grep -v grep | awk '{print $1}')
+}
+
+function kill_httpd()
+{
+   local pid=$(find_httpd_pid)
+   if [ ! -z $pid ]; then
+     echo "kill httpd:$pid"
+     kill -9 $pid
+   else
+     echo "not found httpd process!"
+   fi
 }
