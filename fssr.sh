@@ -43,7 +43,9 @@ function save()
      fi
      local length=${#data[@]}
      local html="<div><p>"$tag" (total:$length)</p>"
+     rm -rf ssr.txt
      for((i=0;i<length;i++)); do
+         echo "${data[i]}" >> ssr.txt
          html=$html'<a href="'${data[i]}'">'${data[i]}'</a><br><br>'
      done
      html=$html'</div><br>'
