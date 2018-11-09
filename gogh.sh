@@ -311,18 +311,45 @@ elif [ "$INTENT" == "no" ];then
 fi
 done
 }
+
+function display_dialog()
+{
+  local number=1
+  local dialog="dialog --keep-window --menu 请选择主题(${#THEMES[@]}种): 30 $(($(stty size | awk '{print $2}')-8)) 30"
+  echo "loading..."
+  for th in "${THEMES[@]}"; do
+    local str=${th// /}
+    str=${str//.sh/}
+    dialog+=" ($number) ${str}"
+    ((number++))
+  done
+  local opt=$(mktemp)
+  $dialog 2>$opt
+  OPTION=$(sed "s/(\(.*\))/\1/" $opt)
+  rm $opt
+  printf "\n"
+}
+
 # |
 # | ::::::: Select Option
 # |
-ask_user
-echo -e "\nUsage : Enter Desired Themes Numbers (\\033[0m\033[0;34mOPTIONS\\033[0m\033[0m) Separated By A Blank Space"
-echo -e "        Press \033[0;34mENTER\\033[0m without options to Exit\n"
-read -p 'Enter OPTION(S) : ' -a OPTION
-
-
+style=$1
+if [ "$style" = "" ]; then style="SIMPLE"; fi
+if [ "$style" = "SIMPLE" ]; then
+ ask_user
+ echo -e "\nUsage : Enter Desired Themes Numbers (\\033[0m\033[0;34mOPTIONS\\033[0m\033[0m) Separated By A Blank Space"
+ echo -e "        Press \033[0;34mENTER\\033[0m without options to Exit\n"
+ read -p 'Enter OPTION(S) : ' -a OPTION
+elif [ "$style" = "DIALOG" ]; then
+ display_dialog
+else
+ echo "invalid style:$style!"
+ exit 1
+fi
 # |
 # | ::::::: Apply Theme
 # |
+if [ "$OPTION" = "" ]; then exit 0; fi
 option_size=${#OPTION[@]}
 for ((index=0;index<${option_size};index++)); do
     OP=${OPTION[index]}
