@@ -24,19 +24,30 @@ alias uf="update_termux_font"
 alias fhp="find_httpd_pid"
 alias kh="kill_httpd"
 alias klh='cd $KALI_HOME/root'
-alias kali="exec_command_by_proot $KALI_HOME" 
-alias skl="kali bash"
+alias kali="exec_command_by_proot --no-exec $KALI_HOME" 
+alias skl="exec_command_by_proot --exec $KALI_HOME /bin/bash --login"
 
 function exec_command_by_proot()
 {
-  if [ $# -gt 1 ]; then
-    local sysdir=$1
-    shift 1
+#  set -x
+  if [ $# -gt 2 ]; then
+    local mode=$1
+    if [ "$mode" = "--exec" ]; then
+        mode="exec"
+    elif [ "$mode" = "--no-exec" ]; then
+        mode=""
+    else
+      echo "not found mode:$mode!"
+      exit 1
+    fi
+    local sysdir=$2
+    shift 2
     unset LD_PRELOAD
-    proot --link2symlink -0 -r $sysdir -b /dev/ -b /sys/ -b /proc/ -b $TERMUX_HOME:/termux -w /root /usr/bin/env -i HOME=/root USER=root TERM="xterm-256color" LANG=en_US.UTF-8 PATH=/bin:/usr/bin:/sbin:/usr/sbin $@
+    $mode proot --link2symlink -0 -r $sysdir -b /dev -b /proc -b /sys -b $TERMUX_HOME:/termux -w /root /usr/bin/env -i HOME=/root USER=root TERM="xterm-256color" LANG=en_US.UTF-8 PATH=/bin:/usr/bin:/sbin:/usr/sbin $@
   else
-    echo "need at least 2 arguments!"
+    echo "need at least 3 arguments!"
   fi
+#  set +x
 }
 
 function solve_vim_charset()
