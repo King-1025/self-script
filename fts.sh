@@ -257,6 +257,22 @@ function display_options()
   echo ""
 }
 
+function display_dialog()
+{
+  local number=1
+  local dialog="dialog --keep-window --menu 请选择字体(${#FONTS[@]}种): 30 $(($(stty size | awk '{print $2}')-8)) 30"
+  echo "loading..."
+  for ft in "${FONTS[@]}"; do
+    dialog+=" ($number) ${ft// /}"
+    ((number++))
+  done
+  local opt=$(mktemp)
+  $dialog 2>$opt
+  OPTION=$(sed "s/(\(.*\))/\1/" $opt)
+  rm $opt
+  printf "\n"
+}
+
 ask_user()
 {
   while true; do  
@@ -275,11 +291,20 @@ ask_user()
 function menu()
 {
 #  set -x
-  echo "=========FONTS========"
-  ask_user
-  read -p "Enter your option:" OPTION
+  local style=$1
+  if [ "$style" = "" ]; then style="SIMPLE"; fi
+  if [ "$style" = "SIMPLE" ]; then
+     echo "=========FONTS========"
+     ask_user
+     read -p "Enter your option:" OPTION
+  elif [ "$style" = "DIALOG" ]; then
+     display_dialog
+  else
+     echo "invalid menu style:$style!"
+     exit 1
+  fi
   printf %d $OPTION > /dev/null 2>&1
-  if [ $? -eq 0 ]; then
+  if [ $? -eq 0 ] && [ "$OPTION" != "" ]; then
     if [ $OPTION -ge 1 ]&&[ $OPTION -le $FONTS_SIZE ]; then
        ((OPTION--))
 #       echo OPTION:$OPTION
@@ -301,4 +326,4 @@ function menu()
   fi
 }
 
-menu
+menu $*
