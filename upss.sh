@@ -4,7 +4,9 @@
 
 ROOT="$HOME"
 STORE_FILE="$ROOT/.up_store"
-USE_TAG=0
+DEFAULT_TAG=king
+USE_TAG=1
+USE_DEFAULT_TAG=0
 
 function parse_args()
 {
@@ -23,13 +25,21 @@ function parse_args()
 	      exit 1
 	   fi
 	 ;;
-         "-t"|"--tag")
-	    USE_TAG=1
+         "-s"|"--site")
+	    USE_TAG=0
 	 ;;
-         "get")
+         "-d"|"--default-tag")
+	    USE_DEFAULT_TAG=1
+         ;;
+         "push")
              if [ $USE_TAG -eq 1 ]; then
                 mode="only_tag"
-                read -p "please input tag:" tag
+		if [ $USE_DEFAULT_TAG -eq 0 ]; then
+                   read -p "please input tag:" tag
+	        else
+		   tag=$DEFAULT_TAG
+		   echo "use default tag:$tag"
+		fi
 		echo ""
              else
                 mode="only_site"
@@ -45,14 +55,7 @@ function parse_args()
 	    if [ $? -eq 0 ]&&[ "$account" != "" ]; then  
                local value=$(echo "$account" | base64 -d)
                if [ $? -eq 0 ]; then
-                 username=$(echo "$value" | awk -F ":" '{print $1}')
-                 password=$(echo "$value" | awk -F ":" '{print $2}' | base64 -d)
-                 expect -c "spawn git push"
-                 expect -c "expect Username"
-                 expect -c "send \"$username\n\""
-                 expect -c "expect Password"
-                 expect -c "send \"$password\n\""
-		 expect -c "expect off"
+                 auto_push $(echo "$value" | awk -F ":" '{print $1}') $(echo "$value" | awk -F ":" '{print $2}' | base64 -d)
                fi
 	    fi
 	 ;;
@@ -62,6 +65,26 @@ function parse_args()
 	 ;;
      esac
   done
+}
+
+function auto_push()
+{
+   if [ $# -eq 2 ]; then
+    local username=$1
+    local password=$2
+    echo "auto pushing..."
+    expect -c "set timeout 30"
+    expect -c "spawn git push" #> /dev/null 2>&1
+    expect -c "expect Username"
+    expect -c "send \"$username\n\"" #> /dev/null 2>&1
+    expect -c "expect Password"
+    expect -c "send \"$password\n\"" #> /dev/null 2>&1
+    expect -c "expect off"
+    echo -e "push finished!\n"
+    git status
+   else
+    echo "auto_push only needs 2 arguments!"
+  fi
 }
 
 function query_account()
