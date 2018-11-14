@@ -2,7 +2,7 @@
 
 USER=chgzh
 PASSWD=123456
-DOMAIN=www.youming1025.xin
+DOMAIN=39.106.72.49  #www.youming1025.xin(过期)
 HOST=
 REMOTE_FILE=
 LOCAL_FILE=
