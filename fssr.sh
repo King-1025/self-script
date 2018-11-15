@@ -134,7 +134,7 @@ function check()
             SELF_UA=1
 	    log "check()" "use self ua instead."
          else
-	    echo "$i not found!"
+	    log "check()" "$i not found!"
 	    let nc+=1
 	 fi
       fi
