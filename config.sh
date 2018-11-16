@@ -86,3 +86,54 @@ function kill_httpd()
      echo "not found httpd process!"
    fi
 }
+
+function upf()
+{
+  declare -a files=("$@")
+  for ((i=1;i<=${#files[@]};i++)); do
+    local f=${files[i]}
+    if [ -e "$f" ]; then
+	echo -n "upload $f..."
+        sf put .tmp/$(basename "$f") "$f" > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+           echo "ok!"
+        else
+           echo "faild!"
+        fi
+    else
+	echo "${f} is not exist! pass it"
+    fi
+  done
+}
+
+function dlf()
+{
+  declare -a files=("$@")
+  for ((i=1;i<=${#files[@]};i++)); do
+    local f=${files[i]}
+    local n=./$(basename "$f")
+    local opt="yes"
+    if [ -e "$n" ]; then
+       local tmp=$(mktemp -u)
+       echo "read -p \"${n} is exist! overwrite?(yes/no)\" opt" > $tmp
+       echo "echo \$opt" >> $tmp
+       chmod +x $tmp
+       while true; do
+         opt=$(sh $tmp)
+	 if [ "$opt" = "yes" ]||[ "$opt" = "no" ]; then
+	    rm -rf $tmp
+	    break
+	 fi
+       done
+    fi
+    if [ "$opt" = "no" ]; then echo "pass ${f}..."; continue; fi
+    echo -n "download $f..."
+    sf get "$n" ".tmp/$f" > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+       echo "ok!"
+    else
+       echo "faild!"
+    fi
+  done
+}
+
