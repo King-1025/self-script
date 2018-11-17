@@ -7,6 +7,8 @@ STORE_FILE="$ROOT/.up_store"
 DEFAULT_TAG=king
 USE_TAG=1
 USE_DEFAULT_TAG=0
+USE_DEFAULT_HOST=0
+DEFAULT_SSH_HOST=39.106.72.49
 
 function parse_args()
 {
@@ -28,36 +30,22 @@ function parse_args()
          "-s"|"--site")
 	    USE_TAG=0
 	 ;;
-         "-d"|"--default-tag")
+         "-dt"|"--default-tag")
 	    USE_DEFAULT_TAG=1
          ;;
          "push")
-             if [ $USE_TAG -eq 1 ]; then
-                mode="only_tag"
-		if [ $USE_DEFAULT_TAG -eq 0 ]; then
-                   read -p "please input tag:" tag
-	        else
-		   tag=$DEFAULT_TAG
-		   echo "use default tag:$tag"
-		fi
-		echo ""
-             else
-                mode="only_site"
-                read -p "please input protocol:" protocol
-                read -p "please input host:" host
-                protocol=$(echo "$protocol" | sed "s/protocol=//")
-                host=$(echo "$host" | sed "s/host=//")
-                site=$(echo "$protocol:$host" | base64 | md5sum | awk '{print $1}')
-		echo ""
-#		printf "protocol=%s\nhost=%s\n" "$protocol" "$host"
-            fi
-	    local account=$(query_account "$mode" "$tag" "$site")
-	    if [ $? -eq 0 ]&&[ "$account" != "" ]; then  
-               local value=$(echo "$account" | base64 -d)
-               if [ $? -eq 0 ]; then
-                 auto_push $(echo "$value" | awk -F ":" '{print $1}') $(echo "$value" | awk -F ":" '{print $2}' | base64 -d)
-               fi
+	    auto_push $(ask_mode) 
+	 ;;
+         "-dh"|"--default-host")
+	    USE_DEFAULT_HOST=1
+	 ;;
+         "ssh")
+	    DEFAULT_TAG=test0
+	    local host="$DEFAULT_SSH_HOST"
+            if [ $USE_DEFAULT_HOST -eq 0 ]; then
+	       read -p "please input ssh host:" host
 	    fi
+	    auto_ssh $(ask_mode) "$host"
 	 ;;
          "store")
             add_account
@@ -65,6 +53,36 @@ function parse_args()
 	 ;;
      esac
   done
+}
+
+function ask_mode()
+{
+  if [ $USE_TAG -eq 1 ]; then
+     mode="only_tag"
+     if [ $USE_DEFAULT_TAG -eq 0 ]; then
+        read -p "please input tag:" tag
+     else
+	tag=$DEFAULT_TAG
+#        echo "use default tag:$tag"
+     fi
+     echo ""
+ else
+     mode="only_site"
+     read -p "please input protocol:" protocol
+     read -p "please input host:" host
+     protocol=$(echo "$protocol" | sed "s/protocol=//")
+     host=$(echo "$host" | sed "s/host=//")
+     site=$(echo "$protocol:$host" | base64 | md5sum | awk '{print $1}')
+     echo ""
+#    printf "protocol=%s\nhost=%s\n" "$protocol" "$host"
+ fi
+ local account=$(query_account "$mode" "$tag" "$site")
+ if [ $? -eq 0 ]&&[ "$account" != "" ]; then  
+    local value=$(echo "$account" | base64 -d)
+    if [ $? -eq 0 ]; then
+       printf "%s %s" $(echo "$value" | awk -F ":" '{print $1}') $(echo "$value" | awk -F ":" '{print $2}' | base64 -d)
+    fi
+ fi
 }
 
 function auto_push()
@@ -87,6 +105,26 @@ function auto_push()
     echo "auto_push only needs 2 arguments!"
   fi
 }
+
+function auto_ssh()
+{
+   if [ $# -eq 3 ]; then
+    local username=$1
+    local password=$2
+    local host=$3
+    local tmp=$(mktemp -u)
+    echo "set timeout 120"                     >> $tmp
+    echo "spawn ssh ${username}@${host}"       >> $tmp
+    echo "expect password"                     >> $tmp
+    echo "send \"$password\r\""                >> $tmp
+    echo "interact"                            >> $tmp
+    expect -f $tmp
+    rm -rf $tmp
+   else
+    echo "auto_ssh only needs 3 arguments!"
+  fi
+}
+
 
 function query_account()
 {
