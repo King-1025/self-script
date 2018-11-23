@@ -9,6 +9,7 @@ USE_TAG=1
 USE_DEFAULT_TAG=0
 USE_DEFAULT_HOST=0
 DEFAULT_SSH_HOST=39.106.72.49
+ONLY_EXECUTE_COMMOND_ON_SSH=0
 
 function parse_args()
 {
@@ -45,7 +46,14 @@ function parse_args()
             if [ $USE_DEFAULT_HOST -eq 0 ]; then
 	       read -p "please input ssh host:" host
 	    fi
-	    auto_ssh $(ask_mode) "$host"
+	    local command_chunk=""
+	    if [ "$ONLY_EXECUTE_COMMAND_ON_SSH" -eq 1 ]; then
+                command_chunk="$may_value"
+	    fi
+	    auto_ssh $(ask_mode) "$host" "$command_chunk"
+	 ;;
+         "-e"|"--execute-command")
+	    ONLY_EXECUTE_COMMAND_ON_SSH=1
 	 ;;
          "store")
             add_account
@@ -108,20 +116,25 @@ function auto_push()
 
 function auto_ssh()
 {
-   if [ $# -eq 3 ]; then
+   if [ $# -eq 4 ]; then
     local username=$1
     local password=$2
     local host=$3
+    local comm=$4
     local tmp=$(mktemp -u)
-    echo "set timeout 120"                     >> $tmp
-    echo "spawn ssh ${username}@${host}"       >> $tmp
-    echo "expect password"                     >> $tmp
-    echo "send \"$password\r\""                >> $tmp
-    echo "interact"                            >> $tmp
+    echo "set timeout 120"                    	       >> $tmp
+    echo "spawn ssh ${username}@${host} \"${comm}\""   >> $tmp
+    echo "expect password"                             >> $tmp
+    echo "send \"$password\r\""                        >> $tmp
+    if [ "$comm" = "" ]; then
+       echo "interact"                                 >> $tmp
+    else
+       echo "expect off"                               >> $tmp
+    fi
     expect -f $tmp
     rm -rf $tmp
    else
-    echo "auto_ssh only needs 3 arguments!"
+    echo "auto_ssh only needs 4 arguments!"
   fi
 }
 
