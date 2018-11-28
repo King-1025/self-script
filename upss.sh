@@ -9,7 +9,7 @@ USE_TAG=1
 USE_DEFAULT_TAG=0
 USE_DEFAULT_HOST=0
 DEFAULT_SSH_HOST=39.106.72.49
-ONLY_EXECUTE_COMMOND_ON_SSH=0
+ONLY_EXECUTE_COMMAND_ON_SSH=0
 
 function parse_args()
 {
@@ -17,7 +17,7 @@ function parse_args()
   local length=${#args[@]}
   for ((i=0;i<$length;i++)); do
      let j=i+1
-     local may_value=${args[$j]}
+     local may_value=${args[j]}
      case "${args[i]}" in
         "-f"|"--file")
 	   echo "$may_value" | grep -E "^[-|\-\-]" > /dev/null 2>&1
@@ -35,7 +35,8 @@ function parse_args()
 	    USE_DEFAULT_TAG=1
          ;;
          "push")
-	    auto_push $(ask_mode) 
+	    auto_push $(ask_mode)
+	    break
 	 ;;
          "-dh"|"--default-host")
 	    USE_DEFAULT_HOST=1
@@ -47,10 +48,15 @@ function parse_args()
 	       read -p "please input ssh host:" host
 	    fi
 	    local command_chunk=""
-	    if [ "$ONLY_EXECUTE_COMMAND_ON_SSH" -eq 1 ]; then
-                command_chunk="$may_value"
+	    if [ $ONLY_EXECUTE_COMMAND_ON_SSH -eq 1 ]; then
+#	       set -x
+	       for ((p=$j;p<$length;p++)); do
+                  command_chunk+="${args[p]} "
+               done
+#	       set +x
 	    fi
 	    auto_ssh $(ask_mode) "$host" "$command_chunk"
+	    break
 	 ;;
          "-e"|"--execute-command")
 	    ONLY_EXECUTE_COMMAND_ON_SSH=1
