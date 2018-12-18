@@ -10,6 +10,7 @@ USE_DEFAULT_TAG=0
 USE_DEFAULT_HOST=0
 DEFAULT_SSH_HOST=39.106.72.49
 ONLY_EXECUTE_COMMAND_ON_SSH=0
+IS_ROOT_SSH=0
 
 function parse_args()
 {
@@ -41,8 +42,14 @@ function parse_args()
          "-dh"|"--default-host")
 	    USE_DEFAULT_HOST=1
 	 ;;
+         "-r"|"--root")
+	    IS_ROOT_SSH=1
+	 ;;
          "ssh")
 	    DEFAULT_TAG=test0
+	    if [ $IS_ROOT_SSH -eq 1 ]; then
+               DEFAULT_TAG=root
+	    fi
 	    local host="$DEFAULT_SSH_HOST"
             if [ $USE_DEFAULT_HOST -eq 0 ]; then
 	       read -p "please input ssh host:" host
