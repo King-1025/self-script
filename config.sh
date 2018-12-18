@@ -11,12 +11,19 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SELF/lib:$SELF/lib64
 export SCRIPT=$SELF/bin/script
 export KALI_HOME=$TERMUX_HOME/kali-arm64
 
-export OO=/storage/sdcard0/O_o
+export SD=/storage/sdcard0
+export OO=$SD/O_o
+export DL=$SD/Download
+export QQ=$SD/tencent/QQfile_recv
 
+alias sc="cd $SCRIPT"
+alias sd="cd $SD"
+alias oo="cd $OO"
+alias dl="cd $DL"
+alias qq="cd $QQ"
 alias 91="91_spider"
 alias vse="if [ -f out.html ];then cp out.html $OO|android view -f $OO/out.html;else echo Sorry,not found out.html!;fi"
 alias v91="91 -r 0 3 -p 10 -ll i -ls middle -t html -o out.html;vse"
-alias sc="cd $SCRIPT"
 alias gvs="git status"
 alias gaa="git add ."
 alias gm="git commit -m"
@@ -26,6 +33,12 @@ alias kh="kill_httpd"
 alias klh='cd $KALI_HOME/root'
 alias kali="exec_command_by_proot --no-exec $KALI_HOME" 
 alias skl="exec_command_by_proot --exec $KALI_HOME /bin/bash --login"
+alias ten="trt use baidu -t en"
+alias tzh="trt use baidu -t zh"
+alias tjp="trt use baidu -t jp"
+alias aup="upss -dt push"                                                          alias ash="upss -dt -dh -e ssh"
+alias ipk="if [ -e "output/signed-debug.apk" ]; then cp "output/signed-debug.apk" $
+OO/1.apk && android install $OO/1.apk; fi"
 
 function exec_command_by_proot()
 {
