@@ -37,8 +37,7 @@ alias ten="trt use baidu -t en"
 alias tzh="trt use baidu -t zh"
 alias tjp="trt use baidu -t jp"
 alias aup="upss -dt push"                                                          alias ash="upss -dt -dh -e ssh"
-alias ipk="if [ -e "output/signed-debug.apk" ]; then cp "output/signed-debug.apk" $
-OO/1.apk && android install $OO/1.apk; fi"
+alias ipk="if [ -e "output/signed-debug.apk" ]; then cp "output/signed-debug.apk" $OO/out.apk && android install $OO/out.apk; fi"
 
 function exec_command_by_proot()
 {

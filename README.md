@@ -16,5 +16,6 @@
 ├── okdroid.sh          安卓终端构建
 ├── sf.sh               远程文件传输
 ├── trt.sh              在线翻译工具
+├── once.sh             影子环境
 └── upss.sh             认证和授权管理
 ```
