@@ -40,6 +40,7 @@ function parse_args()
 	    USE_DEFAULT_TAG=1
          ;;
          "push")
+	    #set -x
 	    auto_push $(ask_mode)
 	    break
 	 ;;
@@ -64,9 +65,37 @@ function parse_args()
 	       for ((p=$j;p<$length;p++)); do
                   command_chunk+="${args[p]} "
                done
+	       unset p
 #	       set +x
 	    fi
 	    auto_ssh $(ask_mode) "$host" "$command_chunk"
+	    break
+	 ;;
+         "scp")
+	    DEFAULT_TAG=test0
+	    local host="$DEFAULT_SSH_HOST"
+            if [ $USE_DEFAULT_HOST -eq 0 ]; then
+	       read -p "please input scp host:" host
+	    fi
+	    local vc=$((length-j))
+            if [ $vc -ge 3 ]; then
+	       local options=""
+	       local m=$((j+1))
+	       local n=$((length-2))
+	       for ((p=$m;p<$n;p++)); do
+                  options+="${args[p]} "
+               done
+	       unset p
+	       auto_scp $(ask_mode) "$host" "${args[j]}" "${args[length-2]}" "${args[length-1]}" "$options"
+	    fi
+	    break
+	 ;;
+         "-t"|"--tag")
+	    USE_DEFAULT_TAG=1
+            DEFAULT_TAG=$may_value
+	 ;;
+         "mode")
+	    ask_mode
 	    break
 	 ;;
          "-e"|"--execute-command")
@@ -159,6 +188,39 @@ function auto_ssh()
   fi
 }
 
+function auto_scp()
+{
+  if [ $# -eq 7 ]; then
+    local remote="$1@$3"
+    local password=$2
+    local method=$4
+    local p1=$5
+    local p2=$6
+    local opt=$7
+    local comm=""
+    case "$method" in
+	 "dl") comm="$opt $remote:$p1 $p2";;
+	 "up") comm="$opt $p1 $remote:$p2";;
+	  "*") comm="";;
+    esac
+    if [ "$comm" != "" ]; then
+       echo $comm
+       #exit
+       set -x
+       local tmp=$(mktemp -u)
+       echo "set timeout 120"         >> $tmp
+       echo "spawn scp \"${comm}\""   >> $tmp
+       echo "expect $remote"         >> $tmp
+       echo "send $password"    >> $tmp
+       echo "expect off"              >> $tmp
+       expect -f $tmp
+       rm -rf $tmp
+       set +x
+    fi
+   else
+    echo "auto_ssh only needs 7 arguments!"
+  fi
+}
 
 function query_account()
 {

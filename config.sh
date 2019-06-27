@@ -15,7 +15,9 @@ export SD=/sdcard
 export OO=$SD/oo
 export DL=$SD/Download
 export QQ=$SD/tencent/QQfile_recv
+export WX=$SD/tencent/MicroMsg/Download
 
+alias wx="cd $WX"
 alias sc="cd $SCRIPT"
 alias sd="cd $SD"
 alias oo="cd $OO"
@@ -33,6 +35,7 @@ alias kh="kill_httpd"
 alias klh='cd $KALI_HOME/root'
 alias kali="exec_command_by_proot --no-exec $KALI_HOME" 
 alias skl="exec_command_by_proot --exec $KALI_HOME /bin/bash --login"
+#alias skl_="exec_command_by_proot --exec $KALI_HOME /bin/sh"
 alias ten="trt use baidu -t en"
 alias tzh="trt use baidu -t zh"
 alias tjp="trt use baidu -t jp"
@@ -56,7 +59,8 @@ function exec_command_by_proot()
     local sysdir=$2
     shift 2
     unset LD_PRELOAD
-    $mode proot --link2symlink -0 -r $sysdir -b /dev -b /proc -b /sys -b $TERMUX_HOME:/termux -w /root /usr/bin/env -i HOME=/root USER=root TERM="xterm-256color" LANG=en_US.UTF-8 PATH=/bin:/usr/bin:/sbin:/usr/sbin $@
+    $mode proot --link2symlink -0 -r $sysdir -b /dev -b /proc -b /sys -b $TERMUX_HOME:/termux -b /storage/sdcard0/AppProjects:/root/AIDE -w /root /usr/bin/env -i HOME=/root USER=root TERM="xterm-256color" LANG=en_US.UTF-8 PATH=/bin:/usr/bin:/sbin:/usr/sbin $@
+    #$mode proot --link2symlink -0 -r $sysdir -b $TERMUX_HOME/dev:/dev -b $TERMUX_HOME/proc:/proc -b $TERMUX_HOME/sys:/sys -b $TERMUX_HOME:/termux -b /storage/sdcard0/AppProjects:/root/AIDE -w /root /usr/bin/env -i HOME=/root USER=root TERM="xterm-256color" LANG=en_US.UTF-8 PATH=/bin:/usr/bin:/sbin:/usr/sbin $@
   else
     echo "need at least 3 arguments!"
   fi

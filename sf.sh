@@ -1,5 +1,7 @@
-#!/data/data/com.termux/files/usr/bin/env bash
+#!/usr/bin/env bash
 
+USER_=chgzh
+PASSWD_=123456
 USER=test0
 PASSWD=test0
 DOMAIN=39.106.72.49  #www.youming1025.xin(过期)
