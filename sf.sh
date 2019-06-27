@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-USER=chgzh
-PASSWD=123456
+USER=test0
+PASSWD=test0
 DOMAIN=39.106.72.49  #www.youming1025.xin(过期)
 HOST=
 REMOTE_FILE=

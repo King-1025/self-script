@@ -11,8 +11,8 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SELF/lib:$SELF/lib64
 export SCRIPT=$SELF/bin/script
 export KALI_HOME=$TERMUX_HOME/kali-arm64
 
-export SD=/storage/sdcard0
-export OO=$SD/O_o
+export SD=/sdcard
+export OO=$SD/oo
 export DL=$SD/Download
 export QQ=$SD/tencent/QQfile_recv
 
@@ -150,3 +150,20 @@ function dlf()
   done
 }
 
+function rsg()
+{
+   if [[ $# -ge 2 ]]; then
+     auto_rsync $1 $2 0
+   else
+     echo "Usage: rsg <local-path> <remote-path> 拉取文件"
+   fi
+}
+
+function rsp()
+{
+   if [[ $# -ge 2 ]]; then
+     auto_rsync $1 $2 1
+   else
+     echo "Usage: rsp <local-path> <remote-path> 推送文件"
+   fi
+}

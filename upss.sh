@@ -29,6 +29,10 @@ function parse_args()
 	      exit 1
 	   fi
 	 ;;
+         "-t"|"--tag")
+	    USE_DEFAULT_TAG=1
+	    DEFAULT_TAG=$may_value
+	 ;;
          "-s"|"--site")
 	    USE_TAG=0
 	 ;;
@@ -70,6 +74,10 @@ function parse_args()
 	 ;;
          "store")
             add_account
+	    break
+	 ;;
+         "ask")
+            ask_mode
 	    break
 	 ;;
      esac
