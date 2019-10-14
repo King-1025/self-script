@@ -78,12 +78,12 @@ function compile_java_classes()
 
         local all=$(cat $origin)
 	if [ -e "$clean" ]; then
-	   #set -x
 	   local slen=${#java_source}
            while read line; do
-              rm -rf ${java_classes}/${line:$slen:-5}*.class
+              #rm -rf ${java_classes}/${line:$slen:-5}*.class
+              local dm="find ${java_classes} -type f -name \"*.class\" -print | grep -E \"${line:$slen:-5}*.class\" | xargs rm -rf"
+              echo $dm && eval $dm
 	   done < $clean
-	   #set +x
 	   rm -rf "$clean" > /dev/null 2>&1
 	fi
         if [ -e "$target" ]; then
