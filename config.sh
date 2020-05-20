@@ -12,10 +12,13 @@ export SCRIPT=$SELF/bin/script
 export KALI_HOME=$TERMUX_HOME/kali-arm64
 
 export SD=/sdcard
-export OO=$SD/oo
+export OO=$SD/O_o
 export DL=$SD/Download
-export QQ=$SD/tencent/QQfile_recv
+#export QQ=$SD/tencent/QQfile_recv
+export QQ=$SD/Android/data/com.tencent.mobileqq/Tencent/QQfile_recv
 export WX=$SD/tencent/MicroMsg/Download
+
+export WEB="http://39.106.72.49:801/"
 
 alias wx="cd $WX"
 alias sc="cd $SCRIPT"
@@ -42,6 +45,8 @@ alias tjp="trt use baidu -t jp"
 alias aup="upss -dt push"                                                    
 alias ash="upss -dt -dh -e ssh"
 alias ipk="if [ -e "output/signed-debug.apk" ]; then cp "output/signed-debug.apk" $OO/out.apk && android install $OO/out.apk; fi"
+alias auuy="apt update -y && apt upgrade -y"
+alias now="echo $(date "+%Y.%m.%d") && expl $(date "+%Y %m %d")"
 
 function exec_command_by_proot()
 {
@@ -59,7 +64,11 @@ function exec_command_by_proot()
     local sysdir=$2
     shift 2
     unset LD_PRELOAD
-    $mode proot --link2symlink -0 -r $sysdir -b /dev -b /proc -b /sys -b $TERMUX_HOME:/termux -b /storage/sdcard0/AppProjects:/root/AIDE -w /root /usr/bin/env -i HOME=/root USER=root TERM="xterm-256color" LANG=en_US.UTF-8 PATH=/bin:/usr/bin:/sbin:/usr/sbin $@
+    rm -rf $KALI_HOME/dev
+    $mode proot --link2symlink -0 -r $sysdir    \
+    $(eval echo $(sed -n "/^-b/p" ~/.kali_dev)) \
+    $(eval echo $(sed -n "/^-b/p" ~/.kali_dir)) \
+    -w /root /usr/bin/env -i HOME=/root USER=root TERM="xterm-256color" LANG=en_US.UTF-8 PATH=/bin:/usr/bin:/sbin:/usr/sbin $@
     #$mode proot --link2symlink -0 -r $sysdir -b $TERMUX_HOME/dev:/dev -b $TERMUX_HOME/proc:/proc -b $TERMUX_HOME/sys:/sys -b $TERMUX_HOME:/termux -b /storage/sdcard0/AppProjects:/root/AIDE -w /root /usr/bin/env -i HOME=/root USER=root TERM="xterm-256color" LANG=en_US.UTF-8 PATH=/bin:/usr/bin:/sbin:/usr/sbin $@
   else
     echo "need at least 3 arguments!"

@@ -4,7 +4,8 @@
 
 BAIDU_APPID="20180407000143698"
 BAIDU_KEY="7eflq1FNSEGlAzYwQhCY"
-BAIDU_TRANSLATE_API_URL="http://api.fanyi.baidu.com/api/trans/vip/translate"
+#BAIDU_TRANSLATE_API_URL="http://api.fanyi.baidu.com/api/trans/vip/translate"
+BAIDU_TRANSLATE_API_URL="https://fanyi-api.baidu.com/api/trans/vip/translate"
 BAIDU_TRANSLATE_MAX_QUERY_LENGTH=2000
 BAIDU_TRANSLATE_SUPPORT_LANGUAGES="\
 auto	自动检测
@@ -42,7 +43,7 @@ DEFAULT_TO_LANGUAGE=en
 DEFAULT_OUTPUT_FORMAT=plain
 
 SUPPORT_OUTPUT_FORMATS="\
-raw	输出json格式
+json	输出json格式
 plain	输出文本格式"
 
 VERSION=1.0
@@ -74,7 +75,7 @@ function user_help()
   echo "Usage:$1 psl baidu"
   echo "      $1 use baidu <query-string>"  
   echo "      $1 use baidu -t en <query-string>"  
-  echo "      $1 use baidu -f auto -t en -o raw <query-string>"
+  echo "      $1 use baidu -f auto -t en -o json <query-string>"
   echo "      "
   echo "Default: from:$DEFAULT_FROM_LANGUAGE to:$DEFAULT_TO_LANGUAGE output-format:$DEFAULT_OUTPUT_FORMAT"
 }
@@ -137,13 +138,14 @@ function baidu_translate()
        local str="${appid}${query}${salt}${key}"
        local sign=$(printf "$str" | md5sum | awk '{print $1}')
        local tmp=$(mktemp -u)
-       curl -s -X POST --data-urlencode "q=$query" --data "from=$from&to=$to&appid=$appid&salt=$salt&sign=$sign" -o $tmp $url
+       curl -s -H "Content-Type: application/x-www-form-urlencoded" -X POST --data-urlencode "q=$query" --data "from=$from&to=$to&appid=$appid&salt=$salt&sign=$sign" -o $tmp $url
        if [ $? -eq 0 ]&&[ -e "$tmp" ]; then
 	  local emsg=$(jq -r ".error_msg" $tmp)
 	  if [ "$emsg" = "null" ]; then
              format_result "$tmp" "$format"
 	  else
-	    echo "error:$emsg"
+	     local code=$(jq -r ".error_code" $tmp)
+	     echo "error: $emsg ($code)"
 	  fi
 	  rm -rf $tmp
        fi
@@ -159,7 +161,7 @@ function format_result()
         local format=$2
 	if [ "$format" = "" ]; then format=$DEFAULT_OUTPUT_FORMAT; fi
         case "$format" in
-           "raw") cat $data ;;
+           "json") cat $data ;;
 	   "plain") jq -r ".trans_result[].dst" $data ;;
 	   *) echo "unknown output format:$format";;
         esac

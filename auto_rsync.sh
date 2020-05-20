@@ -16,7 +16,7 @@ function auto_rsync()
     local flag=$7
     local tmp=$(mktemp -u)
     echo "set timeout 120"      >> $tmp
-    local comm="spawn rsync -avP -zz -e \"ssh -p ${port}\""  
+    local comm="spawn rsync -avrP -zz -e \"ssh -p ${port}\""  
     if [[ $flag -ge 1 ]]; then
       comm="$comm ${left} ${username}@${host}:${right}"
     else
