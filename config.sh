@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 
+
+# for linux
+#export TERMUX_ROOT=
+#export TERMUX_PREFIX=$TERMUX_ROOT/usr
+#export TERMUX_HOME=$TERMUX_ROOT/home/king
+
+
+# for termux
 export TERMUX_ROOT=/data/data/com.termux
 export TERMUX_PREFIX=$TERMUX_ROOT/files/usr
 export TERMUX_HOME=$TERMUX_ROOT/files/home
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SELF/lib:$SELF/lib64
 
 export SELF=$TERMUX_HOME/self
 export PATH=$PATH:$SELF/bin:$SELF/sbin:$SELF/bin/busybox
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SELF/lib:$SELF/lib64
 
 export SCRIPT=$SELF/bin/script
 export KALI_HOME=$TERMUX_HOME/kali-arm64
@@ -42,7 +50,8 @@ alias skl="exec_command_by_proot --exec $KALI_HOME /bin/bash --login"
 alias ten="trt use baidu -t en"
 alias tzh="trt use baidu -t zh"
 alias tjp="trt use baidu -t jp"
-alias aup="upss -dt push"                                                    
+alias aup="upss -t gitee push"
+alias aug="upss -t gitee pull" 
 alias ash="upss -dt -dh -e ssh"
 alias ipk="if [ -e "output/signed-debug.apk" ]; then cp "output/signed-debug.apk" $OO/out.apk && android install $OO/out.apk; fi"
 alias auuy="apt update -y && apt upgrade -y"
@@ -179,4 +188,40 @@ function rsp()
    else
      echo "Usage: rsp <local-path> <remote-path> 推送文件"
    fi
+}
+
+function ips()
+{
+   declare ips=($(ifconfig | grep "inet " | awk '{print $2}'))
+   for i in ${ips[@]}; do
+       echo "IP: $i"
+   done
+}
+
+function dk()
+{
+#   set -x
+
+   local p=""
+   local h=""
+
+   [[ $# -eq 0 ]] && h="$(pwd)" && p="8080"
+   [[ $# -eq 1 ]] && h="$1" && p="8080" 
+   [[ $# -eq 2 ]] && h="$1" && p="$2"
+
+   if [ "$p" != "" ] && [ "$h" != "" ]; then
+      if [ -e "$h" ]; then
+         echo "HOME: $h"
+	 echo
+         declare ips=($(ifconfig | grep "inet " | awk '{print $2}'))
+         for i in ${ips[@]}; do
+             echo "=> http://$i:$p/"
+         done
+         darkhttpd "$h" --port "$p" > /dev/null 2>&1 || echo "error"
+      else
+	 echo "Err: $h not exist!" 
+      fi
+   fi
+
+#  set +X
 }

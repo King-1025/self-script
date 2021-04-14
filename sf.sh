@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-USER_=chgzh
-PASSWD_=123456
-USER=test0
-PASSWD=test0
-DOMAIN=39.106.72.49  #www.youming1025.xin(过期)
+USER=
+PASSWD=
+# DOMAIN=39.106.72.49  #www.youming1025.xin(过期)
+# HOST=47.93.58.31
+# HOST=39.98.142.122
 HOST=
 REMOTE_FILE=
 LOCAL_FILE=
@@ -26,11 +26,13 @@ function details(){
 
 function print_help(){
    echo "Usage:sf <get [LOCAL_FILE] | put [REMOTE_FILE]> <file>"
-   echo "Description:从$DOMAIN上获取/上传文件"
+   echo "Description:从$HOST上获取/上传文件"
    return 0
 }
 
-getHost $DOMAIN
+if [ "$HOST" == "" ]; then
+   getHost $DOMAIN
+fi
 
 argc=$#
 
